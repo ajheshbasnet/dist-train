@@ -3,6 +3,7 @@ from configs import configs
 from transformers import AutoTokenizer
 import math
 import torch
+from colorama import Fore, Style
 from torch.utils.data import DataLoader
 
 def return_dataloader():
@@ -16,6 +17,8 @@ def return_dataloader():
     text_stream_ids = tokenizer(text_stream)['input_ids']  # since it's in shape [1, K] so taking only K dimension
 
     ids_len = len(text_stream_ids)
+
+    print(Fore.GREEN + f'\nTotal Tokens Used For Training: {ids_len}\n' + Style.RESET_ALL)
 
     # == since inorder to form the stack of tensor, they should have the equal dimension so we need to fix the length by adding padding tokens ==
 

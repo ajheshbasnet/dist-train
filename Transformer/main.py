@@ -32,7 +32,7 @@ def main():
     
     total_params = sum(p.numel() for p in model.parameters())
 
-    print(Fore.GREEN + f'\n== Trainable Parameters: {total_params/1e6 :.2f} Millions ==' + Style.RESET_ALL)
+    print(Fore.GREEN + f'== Trainable Parameters: {total_params/1e6 :.2f} Millions ==' + Style.RESET_ALL)
 
     global_step = 0
     

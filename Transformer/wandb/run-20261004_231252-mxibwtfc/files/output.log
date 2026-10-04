@@ -1,0 +1,72 @@
+Dataset loaded from: C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\data
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (2530049 > 1024). Running this sequence through the model will result in indexing errors
+[32m
+Total Tokens Used For Training: 2530049
+[0m
+[32m
+== Trainable Parameters: 31.75 Millions ==[0m
+[34m
+== Epoch: 1 / 1 ==[0m
+[31m   Loss: 9.506 | Perplexity: 13440.697[0m
+[31m   Loss: 9.123 | Perplexity: 9164.203[0m
+[31m   Loss: 8.906 | Perplexity: 7375.487[0m
+[31m   Loss: 8.798 | Perplexity: 6623.050[0m
+[31m   Loss: 8.724 | Perplexity: 6146.427[0m
+[31m   Loss: 8.665 | Perplexity: 5798.451[0m
+[31m   Loss: 8.585 | Perplexity: 5351.630[0m
+[31m   Loss: 8.638 | Perplexity: 5639.482[0m
+[31m   Loss: 8.587 | Perplexity: 5363.509[0m
+[31m   Loss: 8.539 | Perplexity: 5108.159[0m
+[31m   Loss: 8.544 | Perplexity: 5134.963[0m
+[31m   Loss: 8.442 | Perplexity: 4636.187[0m
+[31m   Loss: 8.283 | Perplexity: 3956.222[0m
+[31m   Loss: 8.380 | Perplexity: 4359.750[0m
+[31m   Loss: 8.286 | Perplexity: 3969.828[0m
+[31m   Loss: 8.340 | Perplexity: 4190.000[0m
+[31m   Loss: 8.323 | Perplexity: 4115.617[0m
+Error in sys.excepthook:
+Traceback (most recent call last):
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\wandb\sdk\lib\exit_hooks.py"[0m, line [35m43[0m, in [35mexc_handler[0m
+    def exc_handler(
+
+[1;35mKeyboardInterrupt[0m
+
+Original exception was:
+Traceback (most recent call last):
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\main.py"[0m, line [35m84[0m, in [35m<module>[0m
+    [31mmain[0m[1;31m()[0m
+    [31m~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\main.py"[0m, line [35m55[0m, in [35mmain[0m
+    output = model(input_batch, attn_mask)
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py"[0m, line [35m1783[0m, in [35m_wrapped_call_impl[0m
+    return [31mself._call_impl[0m[1;31m(*args, **kwargs)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py"[0m, line [35m1794[0m, in [35m_call_impl[0m
+    return forward_call(*args, **kwargs)
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\transformer.py"[0m, line [35m32[0m, in [35mforward[0m
+    x = decoder(x, attn_mask)
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py"[0m, line [35m1783[0m, in [35m_wrapped_call_impl[0m
+    return [31mself._call_impl[0m[1;31m(*args, **kwargs)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py"[0m, line [35m1794[0m, in [35m_call_impl[0m
+    return forward_call(*args, **kwargs)
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\decoder.py"[0m, line [35m20[0m, in [35mforward[0m
+    x = x + self.dropout([31mself.ffnn[0m[1;31m(self.ln2(x))[0m)
+                         [31m~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py"[0m, line [35m1783[0m, in [35m_wrapped_call_impl[0m
+    return [31mself._call_impl[0m[1;31m(*args, **kwargs)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py"[0m, line [35m1794[0m, in [35m_call_impl[0m
+    return forward_call(*args, **kwargs)
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\ffnn.py"[0m, line [35m14[0m, in [35mforward[0m
+    x = self.relu([31mself.fc1[0m[1;31m(x)[0m)
+                  [31m~~~~~~~~[0m[1;31m^^^[0m
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py"[0m, line [35m1783[0m, in [35m_wrapped_call_impl[0m
+    return [31mself._call_impl[0m[1;31m(*args, **kwargs)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py"[0m, line [35m1794[0m, in [35m_call_impl[0m
+    return forward_call(*args, **kwargs)
+  File [35m"C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\linear.py"[0m, line [35m134[0m, in [35mforward[0m
+    return [31mF.linear[0m[1;31m(input, self.weight, self.bias)[0m
+           [31m~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1;35mKeyboardInterrupt[0m

@@ -15,9 +15,9 @@ def download_dataset():
         "wikitext-2-raw-v1"
     )
 
-    dataset['train'] = dataset['train'].select(torch.arange(100))
-    dataset['test'] = dataset['test'].select(torch.arange(50))
-    dataset['validation'] = dataset['validation'].select(torch.arange(50))
+    dataset['train'] = dataset['train']
+    dataset['test'] = dataset['test']
+    dataset['validation'] = dataset['validation']
 
     # Save to disk
     dataset.save_to_disk(data_dir)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     new_tokenizer = base_tokenizer.train_new_from_iterator(
         dataset['train']['text'],
-        vocab_size=configs.vocab_size,
+        vocab_size=configs.vocab_size - 2,
     )
 
     new_tokenizer.add_special_tokens({
