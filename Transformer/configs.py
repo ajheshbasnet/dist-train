@@ -1,5 +1,5 @@
 class configs:
-    hidden_dim: int = 512
+    hidden_dim: int = 256
     max_seq_len: int = 756
     n_heads: int = 4
     n_layers: int = 8
