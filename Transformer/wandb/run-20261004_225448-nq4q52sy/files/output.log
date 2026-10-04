@@ -1,0 +1,38 @@
+Dataset loaded from: C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\data
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (6687 > 1024). Running this sequence through the model will result in indexing errors
+[32m== Trainable Parameters: 27.74 Millions ==[0m
+[34m
+== Epoch: 1 / 5 ==[0m
+[31m   Loss: 8.407 | Perplexity: 4476.984[0m
+[31m   Loss: 7.947 | Perplexity: 2825.977[0m
+[31m   Loss: 7.755 | Perplexity: 2334.293[0m
+[31m   Loss: 7.560 | Perplexity: 1920.381[0m
+[31m   Loss: 7.615 | Perplexity: 2028.986[0m
+[34m
+== Epoch: 2 / 5 ==[0m
+[31m   Loss: 7.514 | Perplexity: 1833.905[0m
+[31m   Loss: 7.402 | Perplexity: 1639.931[0m
+[31m   Loss: 7.334 | Perplexity: 1530.900[0m
+[31m   Loss: 7.210 | Perplexity: 1353.209[0m
+[31m   Loss: 7.279 | Perplexity: 1449.478[0m
+[34m
+== Epoch: 3 / 5 ==[0m
+[31m   Loss: 7.268 | Perplexity: 1433.178[0m
+[31m   Loss: 7.159 | Perplexity: 1286.064[0m
+[31m   Loss: 7.121 | Perplexity: 1237.281[0m
+[31m   Loss: 7.025 | Perplexity: 1124.335[0m
+[31m   Loss: 7.067 | Perplexity: 1172.320[0m
+[34m
+== Epoch: 4 / 5 ==[0m
+[31m   Loss: 7.074 | Perplexity: 1180.513[0m
+[31m   Loss: 6.953 | Perplexity: 1046.103[0m
+[31m   Loss: 6.930 | Perplexity: 1022.775[0m
+[31m   Loss: 6.835 | Perplexity: 930.016[0m
+[31m   Loss: 6.869 | Perplexity: 962.154[0m
+[34m
+== Epoch: 5 / 5 ==[0m
+[31m   Loss: 6.899 | Perplexity: 991.279[0m
+[31m   Loss: 6.765 | Perplexity: 866.865[0m
+[31m   Loss: 6.743 | Perplexity: 847.705[0m
+[31m   Loss: 6.657 | Perplexity: 777.941[0m
+[31m   Loss: 6.669 | Perplexity: 787.279[0m

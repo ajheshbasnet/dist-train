@@ -1,0 +1,68 @@
+_wandb:
+    value:
+        cli_version: 0.30.0
+        e:
+            ub3zyjctel2cl038lelu09kymfq3ahmx:
+                codePath: OneDrive\Desktop\Distributed Training\Transformer\main.py
+                codePathLocal: main.py
+                cpu_count: 2
+                cpu_count_logical: 2
+                disk:
+                    /:
+                        total: "126701789184"
+                        used: "94589693952"
+                email: ajheshbasnet@gmail.com
+                executable: C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Scripts\python.exe
+                git:
+                    commit: 85f102c2d7a008982d600c13c1e99caebbca4f6d
+                    remote: https://github.com/ajheshbasnet/portfolio.git
+                host: Ajhesh
+                memory:
+                    total: "4157509632"
+                os: Windows-10-10.0.19045-SP0
+                program: C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\main.py
+                python: CPython 3.13.3
+                root: C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer
+                startedAt: "2026-10-04T17:15:46.155615Z"
+                writerId: ub3zyjctel2cl038lelu09kymfq3ahmx
+        m: []
+        python_version: 3.13.3
+        t:
+            "1":
+                - 1
+                - 11
+                - 49
+                - 51
+            "2":
+                - 1
+                - 11
+                - 49
+                - 51
+            "3":
+                - 16
+                - 61
+            "4": 3.13.3
+            "5": 0.30.0
+            "6": 5.18.0
+            "8":
+                - 3
+            "12": 0.30.0
+            "13": windows-amd64
+batch_size:
+    value: 2
+epochs:
+    value: 5
+hidden_dim:
+    value: 512
+lr:
+    value: 0.0001
+max_seq_len:
+    value: 756
+n_heads:
+    value: 4
+n_layers:
+    value: 8
+resid_dropout:
+    value: 0.1
+vocab_size:
+    value: 4161

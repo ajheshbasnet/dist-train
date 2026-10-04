@@ -1,0 +1,44 @@
+Dataset loaded from: C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\data
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (6687 > 1024). Running this sequence through the model will result in indexing errors
+[32m== Trainable Parameters: 27.74 Millions ==
+[0m
+[31m== Epoch: 1 / 5 | Loss: 8.483 | Perplexity: 4829.946 ==[0m
+[31m== Epoch: 1 / 5 | Loss: 7.980 | Perplexity: 2922.820 ==[0m
+Traceback (most recent call last):
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\main.py", line 72, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\main.py", line 42, in main
+    output = model(input_batch, attn_mask)
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\transformer.py", line 32, in forward
+    x = decoder(x, attn_mask)
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\decoder.py", line 19, in forward
+    x = x + self.dropout(self.attention(self.ln1(x), attn_mask = attn_mask))
+                         ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\Transformer\attention.py", line 26, in forward
+    v = self.v_proj(x).view(B, T, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+        ~~~~~~~~~~~^^^
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\hp\OneDrive\Desktop\Distributed Training\venv\Lib\site-packages\torch\nn\modules\linear.py", line 134, in forward
+    return F.linear(input, self.weight, self.bias)
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
