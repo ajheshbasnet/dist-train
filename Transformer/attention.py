@@ -39,6 +39,6 @@ class Attention(nn.Module):
         norm_attn_score = self.dropout(norm_attn_score)
         outputs = norm_attn_score @ v                                                       #[B, N_HEADS, T, D_HEAD]
         outputs = outputs.permute(0, 2, 1, 3).contiguous()                                  #[B, T, N_HEADS, D_HEAD]
-        outputs = outputs.view(B, T, C)                                                     #[B, T, C]
+        outputs = outputs.view(B, T, -1)                                                   #[B, T, C] - infer last dim for TP
         outputs = self.out_proj(outputs)
         return outputs

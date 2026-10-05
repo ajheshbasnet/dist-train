@@ -12,5 +12,6 @@ class Token_Embedding(nn.Module):
     def forward(self, x):
         _, T = x.size()
         tok_emb = self.token_embedding(x)
-        pos_emb = self.position_embedding(torch.arange(T, device=x.device))
+        pos = torch.arange(T, device=x.device).unsqueeze(0)   #[1, T]
+        pos_emb = self.position_embedding(pos)                #[1, T, D]
         return tok_emb + pos_emb
