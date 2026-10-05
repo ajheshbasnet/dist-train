@@ -5,10 +5,11 @@ import torch.nn as nn
 import random
 import numpy as np
 from colorama import Fore, Style
-from dataloader import return_dataloader
+from dataloader import return_dataset
 from get_wandb_run import get_run
+from torch.utils.data import DataLoader
 
-log_to_wandb = True
+log_to_wandb = False
 
 def set_seed(seed=42):
     random.seed(seed)
@@ -26,7 +27,10 @@ def main():
         run = get_run()
 
     model = Transformer(configs()).to(device)
-    dataloader, tokenizer = return_dataloader()
+
+    dataset, tokenizer = return_dataset()
+    dataloader = DataLoader(dataset, batch_size=configs.batch_size)
+
     optimizers = torch.optim.Adam(model.parameters(), lr=configs.lr)
     criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
     

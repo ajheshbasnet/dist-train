@@ -1,16 +1,15 @@
-from dataset import load_local_dataset
+from prepare_dataset import load_local_dataset
 from configs import configs
 from transformers import AutoTokenizer
 import math
 import torch
 from colorama import Fore, Style
-from torch.utils.data import DataLoader
 
-def return_dataloader():
-    
+def return_dataset():
+
     datasets = load_local_dataset()
 
-    tokenizer = AutoTokenizer.from_pretrained("./my_tokenizer")
+    tokenizer = AutoTokenizer.from_pretrained("C:\\Users\\hp\\OneDrive\\Desktop\\Distributed Training\\Transformer\\my_tokenizer")
 
     text_stream = ''.join(datasets['train']['text'])
 
@@ -58,5 +57,4 @@ def return_dataloader():
             }
 
     dataset = MyCustomDataset(input_ids, target_ids)
-    dataloader = DataLoader(dataset, batch_size=configs.batch_size)
-    return dataloader, tokenizer
+    return dataset, tokenizer
