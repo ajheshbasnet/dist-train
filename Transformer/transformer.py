@@ -12,6 +12,7 @@ class Transformer(nn.Module):
         self.token_embedding = Token_Embedding(configs)
         self.layers = nn.ModuleList([SingleDecoderBlock(configs) for _ in range(configs.n_layers)])
         self.layernorm = nn.LayerNorm(configs.hidden_dim)
+        self.output_proj = nn.Linear(configs.hidden_dim, configs.vocab_size)
 
         self.apply(self._init_weights)
     
@@ -28,15 +29,12 @@ class Transformer(nn.Module):
     
     def forward(self, x, attn_mask = None):
         x = self.token_embedding(x)
+
         for decoder in self.layers:
             x = decoder(x, attn_mask)
+            
         x = self.layernorm(x)
-        
-        emb_w = self.token_embedding.token_embedding.weight
 
-        if isinstance(x, DTensor):
-            x = x.full_tensor()            # all_gather across T
-        if isinstance(emb_w, DTensor):
-            emb_w = emb_w.full_tensor()    # all gather across vocab dimensions
-        logits = x @ emb_w.T
+        logits = self.output_proj(x)
+
         return logits

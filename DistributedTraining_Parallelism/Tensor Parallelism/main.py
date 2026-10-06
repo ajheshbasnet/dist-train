@@ -2,6 +2,7 @@ import os
 import sys
 import torch
 import torch.nn as nn
+from colorama import Fore, Style
 from torch.utils.data import DataLoader
 from torch.distributed.device_mesh import init_device_mesh
 from torch.distributed._tensor import Shard, Replicate
@@ -46,6 +47,10 @@ def apply_tensor_sequence_parallel(model: Transformer, mesh_grid):
         "token_embedding.position_embedding": RowwiseParallel(
             input_layouts = Replicate(),
             output_layouts = Shard(1)  # [B, T, C] so shard across Sequence dimension because now it will go for Normalisation
+        ),
+        "output_proj":ColwiseParallel(
+            input_layouts = Replicate(),
+            output_layouts = Replicate(),
         ),
         "layernorm": SequenceParallel()
     })
@@ -95,7 +100,11 @@ def main():
 
     model = Transformer(configs()).to(device)
 
+    print(Fore.RED + f"Before Sharding parameters: {sum(params.numel() for params in model.parameters())}" + Fore.RESET)
+
     model = apply_tensor_sequence_parallel(model, device_mesh)
+
+    print(Fore.GREEN + f"After Sharding parameters: {sum(params.numel() for params in model.parameters())}" + Fore.RESET)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr = configs.lr)
     criterion = nn.CrossEntropyLoss(ignore_index=0)
@@ -115,27 +124,19 @@ def main():
         # Convert DTensor to regular tensor for loss computation
         logits = logits.to_local() if hasattr(logits, 'to_local') else logits
 
-        # With tensor parallelism, logits are sharded across ranks
-        # Gather full logits from all ranks for loss computation
-        if logits.size(-1) < configs.vocab_size:
-            # Logits are sharded - gather from all ranks
-            gathered_logits = [torch.zeros_like(logits) for _ in range(world_size)]
-            dist.all_gather(gathered_logits, logits)
-            logits = torch.cat(gathered_logits, dim=-1)
+        if rank==0:
+            print(f'Logits-shape: {logits.shape}')
 
         loss = criterion(logits.view(-1, logits.size(-1)), target_ids.view(-1))
 
-        loss_tensor = torch.tensor([loss.item()], device=device)
-        dist.all_reduce(loss_tensor, op=dist.ReduceOp.SUM)
-        avg_loss = loss_tensor.item() / world_size
-        # Backward pass
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         
-        print(f'Rank: {rank} | Loss: {avg_loss :.2f}')
-        
+        if rank==0:
+            print(f'Rank: {rank} | Loss: {loss.item() :.2f}')
 
+        
 if __name__ == "__main__":
     main()
     dist.destroy_process_group()
