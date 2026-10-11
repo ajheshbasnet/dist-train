@@ -1,6 +1,6 @@
 class configs:
-    hidden_dim: int = 256
-    max_seq_len: int = 756
+    hidden_dim: int = 128
+    max_seq_len: int = 512
     n_heads: int = 4
     n_layers: int = 8
     vocab_size: int = 12000
@@ -11,5 +11,6 @@ class configs:
     batch_size: int = 2
     epochs: int = 1
     lr: float = 1e-4
+    tokenizer_path: str = "my_tokenizer"
 
     wandb_api_key: str = "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"

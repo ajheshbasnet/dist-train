@@ -1,3 +1,6 @@
+# Python 3.11.x required
 torch>=2.5.0
 transformers
+datasets
 colorama
+

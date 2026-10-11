@@ -4,12 +4,16 @@ from transformers import AutoTokenizer
 import math
 import torch
 from colorama import Fore, Style
+import os
 
 def return_dataset():
 
     datasets = load_local_dataset()
 
-    tokenizer = AutoTokenizer.from_pretrained("C:\\Users\\hp\\OneDrive\\Desktop\\Distributed Training\\Transformer\\my_tokenizer")
+    # Get the directory of this file and construct relative path to tokenizer
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    tokenizer_path = os.path.join(current_dir, configs.tokenizer_path)
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
     text_stream = ''.join(datasets['train']['text'])
 
