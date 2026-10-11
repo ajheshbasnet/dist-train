@@ -10,7 +10,8 @@ from torch.distributed.tensor.parallel import (
     ColwiseParallel, 
     RowwiseParallel, 
     SequenceParallel, 
-    parallelize_module
+    parallelize_module,
+    PrepareModuleInput
 )
 
 from torch.distributed.fsdp import fully_shard
@@ -51,7 +52,7 @@ def apply_tensor_sequence_parallel(model: Transformer, mesh_grid):
             output_layouts = Shard(1)  # [B, T, C] so shard across Sequence dimension because now it will go for Normalisation
         ),
         "output_proj":ColwiseParallel(
-            input_layouts = Replicate(),
+            input_layouts = Shard(1),
             output_layouts = Replicate(),
         ),
         "layernorm": SequenceParallel()
@@ -63,14 +64,28 @@ def apply_tensor_sequence_parallel(model: Transformer, mesh_grid):
         
         layer_plan = {
                 "attn_norm": SequenceParallel(),
-                "attention.q_proj": ColwiseParallel(input_layouts = Replicate(), output_layouts = Shard(-1)),
-                "attention.k_proj": ColwiseParallel(input_layouts = Replicate(), output_layouts = Shard(-1)),
-                "attention.v_proj": ColwiseParallel(input_layouts = Replicate(), output_layouts = Shard(-1)),
-                "attention.out_proj": RowwiseParallel(input_layouts = Shard(-1), output_layouts = Shard(1)),
+                "attention": PrepareModuleInput(
+                              input_layouts=(Shard(1),),
+                              desired_input_layouts=(Replicate(),),
+                              use_local_output=True,
+                ),
+                "attention.q_proj": ColwiseParallel(),
+                "attention.k_proj": ColwiseParallel(),
+                "attention.v_proj": ColwiseParallel(),
+                "attention.out_proj": RowwiseParallel(output_layouts=Shard(1)),
 
                 "ffnn_norm": SequenceParallel(),
-                "ffnn.fc1": ColwiseParallel(input_layouts = Replicate(), output_layouts = Shard(-1)),
-                "ffnn.fc2": RowwiseParallel(input_layouts = Shard(-1), output_layouts = Shard(1)),
+
+                # SWAP again before the FFN
+
+                "ffnn": PrepareModuleInput(
+                    input_layouts=(Shard(1),),
+                    desired_input_layouts=(Replicate(),),
+                    use_local_output=True,
+                ),
+                "ffnn.fc1": ColwiseParallel(),
+                "ffnn.fc2": RowwiseParallel(output_layouts=Shard(1)),
+
             }
         
         layer.attention.num_heads = layer.attention.num_heads // tp_mesh.size()

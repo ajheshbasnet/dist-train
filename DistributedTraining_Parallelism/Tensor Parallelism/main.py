@@ -10,7 +10,8 @@ from torch.distributed.tensor.parallel import (
     ColwiseParallel, 
     RowwiseParallel, 
     SequenceParallel, 
-    parallelize_module
+    parallelize_module,
+    PrepareModuleInput
 )
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -49,7 +50,7 @@ def apply_tensor_sequence_parallel(model: Transformer, mesh_grid):
             output_layouts = Shard(1)  # [B, T, C] so shard across Sequence dimension because now it will go for Normalisation
         ),
         "output_proj":ColwiseParallel(
-            input_layouts = Replicate(),
+            input_layouts = Shard(1),
             output_layouts = Replicate(),
         ),
         "layernorm": SequenceParallel()
@@ -61,14 +62,28 @@ def apply_tensor_sequence_parallel(model: Transformer, mesh_grid):
         
         layer_plan = {
                 "attn_norm": SequenceParallel(),
-                "attention.q_proj": ColwiseParallel(input_layouts = Replicate(), output_layouts = Shard(-1)),
-                "attention.k_proj": ColwiseParallel(input_layouts = Replicate(), output_layouts = Shard(-1)),
-                "attention.v_proj": ColwiseParallel(input_layouts = Replicate(), output_layouts = Shard(-1)),
-                "attention.out_proj": RowwiseParallel(input_layouts = Shard(-1), output_layouts = Shard(1)),
+                "attention": PrepareModuleInput(
+                              input_layouts=(Shard(1),),
+                              desired_input_layouts=(Replicate(),),
+                              use_local_output=True,
+                ),
+                "attention.q_proj": ColwiseParallel(),
+                "attention.k_proj": ColwiseParallel(),
+                "attention.v_proj": ColwiseParallel(),
+                "attention.out_proj": RowwiseParallel(output_layouts=Shard(1)),
 
                 "ffnn_norm": SequenceParallel(),
-                "ffnn.fc1": ColwiseParallel(input_layouts = Replicate(), output_layouts = Shard(-1)),
-                "ffnn.fc2": RowwiseParallel(input_layouts = Shard(-1), output_layouts = Shard(1)),
+
+                # SWAP again before the FFN
+
+                "ffnn": PrepareModuleInput(
+                    input_layouts=(Shard(1),),
+                    desired_input_layouts=(Replicate(),),
+                    use_local_output=True,
+                ),
+                "ffnn.fc1": ColwiseParallel(),
+                "ffnn.fc2": RowwiseParallel(output_layouts=Shard(1)),
+
             }
         
         layer.attention.num_heads = layer.attention.num_heads // tp_mesh.size()
@@ -82,16 +97,17 @@ def apply_tensor_sequence_parallel(model: Transformer, mesh_grid):
     return model    
 
 def main():
-    tp_dim = 2
-    dp_dim = 1
-    
-    device_mesh = build_device_mesh(tp_dim, dp_dim)
-    
+
     rank = int(os.environ['LOCAL_RANK'])
     world_size = int(os.environ['WORLD_SIZE'])
 
+    tp_dim = 2
+    dp_dim = world_size // tp_dim
+    
+    device_mesh = build_device_mesh(tp_dim, dp_dim)
+    
     if torch.cuda.is_available():
-        device = torch.device(f'cuda:{rank}')
+        device = torch.device(f'cuda: {rank}')
     else:
         device = torch.device('cpu')
 
@@ -100,11 +116,9 @@ def main():
 
     model = Transformer(configs()).to(device)
 
-    print(Fore.RED + f"Before Sharding parameters: {sum(params.numel() for params in model.parameters())}" + Fore.RESET)
+    print(Fore.RED + f"Trainable Parameters: {sum(params.numel() for params in model.parameters())}" + Fore.RESET)
 
     model = apply_tensor_sequence_parallel(model, device_mesh)
-
-    print(Fore.GREEN + f"After Sharding parameters: {sum(params.numel() for params in model.parameters())}" + Fore.RESET)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr = configs.lr)
     criterion = nn.CrossEntropyLoss(ignore_index=0)
@@ -125,7 +139,8 @@ def main():
         logits = logits.to_local() if hasattr(logits, 'to_local') else logits
 
         if rank==0:
-            print(f'Logits-shape: {logits.shape}')
+          print(f'Logits-shape: {logits.shape}')
+
 
         loss = criterion(logits.view(-1, logits.size(-1)), target_ids.view(-1))
 
