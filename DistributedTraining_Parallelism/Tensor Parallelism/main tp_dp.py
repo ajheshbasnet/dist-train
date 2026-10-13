@@ -69,7 +69,7 @@ def apply_tensor_sequence_parallel(model: Transformer, mesh_grid):
                               desired_input_layouts=(Replicate(),),
                               use_local_output=True,
                 ),
-                "attention.q_proj": ColwiseParallel(),
+                "attention.q_proj": ColwiseParallel(),  # default:  use_local_output=True, above: default false
                 "attention.k_proj": ColwiseParallel(),
                 "attention.v_proj": ColwiseParallel(),
                 "attention.out_proj": RowwiseParallel(output_layouts=Shard(1)),
