@@ -24,38 +24,16 @@ layer_per_device = configs.n_layers // world_size
 is_first = rank == 0
 is_last = rank == world_size - 1
 
-if world_size == 2:
-    if not is_first:
-        model.token_embedding = None
+if not is_first:
+    model.token_embedding = None
 
-    if not is_last:
-        model.layernorm = None
-        model.output_proj = None
+if not is_last:
+    model.layernorm = None
+    model.output_proj = None
 
-    model.layers = nn.ModuleList(
-        list(model.layers)[rank * layer_per_device:(rank + 1) * layer_per_device]
-    )
-
-
-# == here i am putting the token embedding in rank 0. and output vocab mapping in rank world_size-1.
-if world_size > 2:
-
-    layer_per_device = configs.n_layers // (world_size - 2)
-
-    if is_first:
-        model.layers = None
-        model.layernorm = None
-        model.output_proj = None
-
-    if is_last:
-        model.token_embedding = None
-        model.layers = None
-    
-    if not is_first and not is_last:
-        model.layers = nn.ModuleList(
-            list(model.layers)[(rank-1) * layer_per_device:rank * layer_per_device]
-        )
-
+model.layers = nn.ModuleList(
+    list(model.layers)[rank * layer_per_device:(rank + 1) * layer_per_device]
+)
 
 model = model.to(device)
 
@@ -90,7 +68,7 @@ for batches in dataload:
     optimizer.zero_grad()
 
     if is_first:
-        schedule.step(input_ids, attn_mask = attn_mask)
+        schedule.step(input_ids)
 
     elif is_last:
         losses = []
@@ -103,5 +81,4 @@ for batches in dataload:
     
     if is_last:
         loss = torch.stack(losses).mean()
-        print(f"Loss: {loss}")
         print(f"Loss: {loss}")
