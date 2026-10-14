@@ -1,5 +1,6 @@
 import os
 import sys
+import torch
 import torch.nn as nn
 from colorama import Fore, Style
 from torch.utils.data import DataLoader
@@ -39,7 +40,7 @@ model = model.to(device)
 from torch.distributed.pipelining import PipelineStage, ScheduleGPipe
 
 stage = PipelineStage(
-    model, stage_idx=rank, num_stages=world_size, device=device
+    model, stage_index=rank, num_stages=world_size, device=device
 )
 
 n_micro_batches = 4
@@ -48,16 +49,16 @@ def loss_function(logits, target):
     return torch.nn.functional.cross_entropy(logits.reshape(-1, logits.shape[-1]), target.reshape(-1))
 
 schedule = ScheduleGPipe(
-    stage, n_micro_batches=n_micro_batches, loss_fn=loss_function
+    stage, n_microbatches=n_micro_batches, loss_fn=loss_function
 )
 
 optimizer = torch.optim.Adam(model.parameters(), lr=configs.lr)
 
 dataset, _ = return_dataset()
 
-dataload = DataLoader(dataset, batch_size=configs.batch_size, shuffle=True)
-
-
+g = torch.Generator().manual_seed(42)
+dataload = DataLoader(dataset, batch_size=configs.batch_size * n_micro_batches,
+                      shuffle=True, generator=g, drop_last=True)
 for batches in dataload:
     input_ids, targets, attn_mask = batches['inputs'], batches['targets'], batches['attn_mask']
     input_ids, targets, attn_mask = input_ids.to(device), targets.to(device), attn_mask.to(device)
@@ -69,10 +70,10 @@ for batches in dataload:
 
     elif is_last:
         losses = []
-        schedule.step(targets, losses, attn_mask = attn_mask)    
+        schedule.step(target=targets, losses=losses)
 
     else:
-        schedule.step(attn_mask = attn_mask)
+        schedule.step()
 
     optimizer.step()
     

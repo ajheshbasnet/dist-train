@@ -40,4 +40,4 @@ class Transformer(nn.Module):
             logits = self.output_proj(x)
             return logits
         
-        return x    
+        return x, attn_mask  # only for middle layers to return
