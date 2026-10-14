@@ -39,5 +39,4 @@ class Transformer(nn.Module):
             x = self.layernorm(x)
             logits = self.output_proj(x)
             return logits
-        
         return x    
