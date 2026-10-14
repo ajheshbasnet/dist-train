@@ -28,13 +28,16 @@ class Transformer(nn.Module):
             nn.init.zeros_(module.bias)
     
     def forward(self, x, attn_mask = None):
-        x = self.token_embedding(x)
+
+        if self.token_embedding is not None:
+            x = self.token_embedding(x)
 
         for decoder in self.layers:
             x = decoder(x, attn_mask)
-            
-        x = self.layernorm(x)
 
-        logits = self.output_proj(x)
-
-        return logits
+        if self.layernorm is not None:        
+            x = self.layernorm(x)
+            logits = self.output_proj(x)
+            return logits
+        
+        return x    
