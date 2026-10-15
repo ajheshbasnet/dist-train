@@ -79,7 +79,7 @@ for batches in dataload:
     optimizers.zero_grad()
 
     if is_first:
-        schedule.step(input_ids)
+        schedule.step(input_ids, attn_mask)
 
     elif is_last:
         all_losses = []
@@ -92,4 +92,4 @@ for batches in dataload:
 
     if is_last:
         loss = torch.stack(all_losses).mean().item()
-        print(f"Loss: {loss}")
+        print(Fore.GREEN + f"Loss: {loss:.4f}" + Style.RESET_ALL)
