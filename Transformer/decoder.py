@@ -9,10 +9,13 @@ class SingleDecoderBlock(nn.Module):
     
     def __init__(self, configs: configs):
         super().__init__()
-        self.attention = Attention(configs)
-        self.ffnn = FFNN(configs)
+
         self.attn_norm = nn.LayerNorm(configs.hidden_dim)
+        self.attention = Attention(configs)
+
+        self.ffnn = FFNN(configs)
         self.ffnn_norm = nn.LayerNorm(configs.hidden_dim)
+        
         self.dropout = nn.Dropout(configs.resid_dropout)
 
     def forward(self, x, attn_mask = None):

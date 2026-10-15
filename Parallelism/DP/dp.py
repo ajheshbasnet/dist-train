@@ -1,4 +1,10 @@
-# == import necessary libraries
+import torch
+import torch.nn as nn
+from configs import configs
+from transformer import Transformer
+from torch.distributed.device_mesh import init_device_mesh
+from torch.distributed.tensor.parallel import parallelize_module
+
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Transformer'))
@@ -6,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Transformer
 import torch
 import torch.distributed as dist
 from transformer import Transformer
-from torch.distributed.DistributedDataParallel import DistributedDataParallel as DDP
+from torch.nn.parallel import DistributedDataParallel as DDP
 from dataloader import return_dataset
 from configs import configs
 
@@ -18,13 +24,14 @@ global_rank = int(os.environ['RANK'])
 
 # == setting up backend ==
 
-if torch.cuda.is_avalable():
+if torch.cuda.is_available():
+    torch.cuda.set_device(local_rank)
     device = torch.device(f'cuda:{local_rank}')
-    dist.init_process_group(backend="nccl", rank=local_rank, world_size=world_size)
+    dist.init_process_group(backend="nccl", rank=global_rank, world_size=world_size)
 
 elif torch.cpu.is_available():
     device = torch.device(f'cpu')
-    dist.init_process_group(backend="gloo", rank=local_rank, world_size=world_size)
+    dist.init_process_group(backend="gloo", rank=global_rank, world_size=world_size)
 
 else:
     raise ValueError("No available device found")
@@ -41,7 +48,10 @@ dataset, _ = return_dataset()
 '''
 
 model = Transformer(configs()).to(device)
-model = DDP(model, device_ids=[local_rank]) # replicating weights the model across the GPUs and assiging the ranks
+if device.type=='cuda':
+  model = DDP(model, device_ids=[local_rank]) # replicating weights the model across the GPUs and assiging the ranks
+else:
+  model = DDP(model)  
 
 sampler = DistributedSampler(dataset, num_replicas=world_size, rank=local_rank)
 dataload = DataLoader(dataset, batch_size=configs.batch_size, sampler=sampler)
@@ -53,11 +63,11 @@ criterion = torch.nn.CrossEntropyLoss(ignore_index=0) # will change this later.
 
 # == training loop ==
 
-for epoch in range(configs().epoch):
+for epoch in range(configs().epochs):
     for batch in dataload:
-        input_ids = batch['input_ids']
-        attention_mask = batch['attention_mask']
-        target_ids = batch['target_ids']
+        input_ids = batch['inputs']
+        attention_mask = batch['attn_mask']
+        target_ids = batch['targets']
         
         input_ids = input_ids.to(device)
         attention_mask = attention_mask.to(device)
@@ -76,4 +86,5 @@ for epoch in range(configs().epoch):
         loss.backward()
         optimizer.step()
 
-        print(f'Rank: {global_rank} | Epoch: {epoch} | Loss: {average_loss.item() :.2f}')
+        if local_rank==0:
+          print(f'Rank: {global_rank} | Epoch: {epoch} | Loss: {average_loss.item() :.2f}')
