@@ -1,17 +1,22 @@
 import os
+import sys
 import torch
 import torch.nn as nn
 import torch.distributed as dist
+from colorama import Fore, Style
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Transformer'))
 
 from transformer import Transformer
 from dataloader import return_dataset
 from configs import configs
+from torch.utils.data import DataLoader
 
 local_rank = int(os.environ['LOCAL_RANK'])
 world_size = int(os.environ['WORLD_SIZE'])
 global_rank = int(os.environ['RANK'])
+
+print(Fore.CYAN + f"Global Rank: {global_rank}, Local Rank: {local_rank}, World Size: {world_size}" + Style.RESET_ALL)
 
 if torch.cuda.is_available():
     device = torch.device(f'cuda:{local_rank}')
@@ -39,7 +44,7 @@ if not is_first:
     model.token_embedding = None
 
 if not is_last:
-    model.layer_norm = None
+    model.layernorm = None
     model.output_proj = None
 
 layer_per_stage = configs().n_layers // world_size
@@ -51,7 +56,7 @@ model.layers = nn.ModuleList(model.layers[global_rank * layer_per_stage : (globa
 from torch.distributed.pipelining import PipelineStage, ScheduleGPipe
 
 stage = PipelineStage(
-    model, stage_rank = global_rank, num_stages = world_size, device = device
+    model, stage_index = global_rank, num_stages = world_size, device = device
 )
 
 n_micro_batches = 2
@@ -59,7 +64,7 @@ n_micro_batches = 2
 def loss_function(logits, targets):
     return torch.nn.functional.cross_entropy(logits.reshape(-1, logits.shape[-1]), targets.reshape(-1))
 
-schedule = ScheduleGPipe(stage, n_micro_batches, lossfn = loss_function)
+schedule = ScheduleGPipe(stage, n_micro_batches, loss_fn = loss_function)
 
 optimizers = torch.optim.Adam(model.parameters(), lr=configs.lr)
 
@@ -77,7 +82,8 @@ for batches in dataload:
         schedule.step(input_ids)
 
     elif is_last:
-        schedule.step(target=targets, losses=[])    
+        all_losses = []
+        schedule.step(target=targets, losses=all_losses)
 
     else:
         schedule.step()
@@ -85,5 +91,5 @@ for batches in dataload:
     optimizers.step()    
 
     if is_last:
-        loss = schedule.loss()
+        loss = torch.stack(all_losses).mean().item()
         print(f"Loss: {loss}")
