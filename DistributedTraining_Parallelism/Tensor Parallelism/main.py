@@ -141,7 +141,6 @@ def main():
         if rank==0:
           print(f'Logits-shape: {logits.shape}')
 
-
         loss = criterion(logits.view(-1, logits.size(-1)), target_ids.view(-1))
 
         optimizer.zero_grad()

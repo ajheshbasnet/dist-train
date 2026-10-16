@@ -1,4 +1,6 @@
 import torch
+import os 
+import sys
 import torch.distributed as dist
 from colorama import Fore, Style
 from torch.distributed._tensor import Replicate, Shard
@@ -8,6 +10,7 @@ from torch.distributed.tensor.parallel import (
 )
 
 from torch.distributed.device_mesh import init_device_mesh
+from torch.utils.data import DataLoader
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Transformer'))
 
@@ -43,8 +46,8 @@ def apply_tensor_shard(model: Transformer, tp_mesh):
     layout = {
         'token_embedding.token_embedding': RowwiseParallel(input_layouts=Replicate(), output_layouts = Shard(1)),
         'token_embedding.position_embedding': RowwiseParallel(input_layouts=Replicate(), output_layouts = Shard(1)),
-        'layers': SequenceParallel(),
-        'output_proj': ColwiseParallel(input_layouts = Replicate(), output_layouts = Replicate())
+        'layernorm': SequenceParallel(),
+        'output_proj': ColwiseParallel(input_layouts = Shard(1), output_layouts = Replicate())
     }
 
     parallelize_module(model, tp_mesh, layout)
@@ -87,15 +90,22 @@ def apply_tensor_shard(model: Transformer, tp_mesh):
 tp_dim = 4
 mesh_grid = build_device_mesh(tp_dim)
 
+model = Transformer(configs()).to(device)
+
 model = apply_tensor_shard(model, mesh_grid['tp'])
 optimizer = torch.optim.Adam(model.parameters(), lr=configs.lr)
 
-dataset, _ = return_dataset(configs.batch_size, configs.seq_len)
+dataset, _ = return_dataset()
+dataload = DataLoader(dataset, batch_size=configs.batch_size, shuffle=True)
 
-for batch in dataset:
-    input_ids, targets = batch
-    input_ids, targets = input_ids.to(device), targets.to(device)
-    logits = model(input_ids)
+for batch in dataload:
+    input_ids, target_ids, attention_mask = batch['inputs'], batch['targets'], batch['attn_mask']
+    input_ids = input_ids.to(device)
+    target_ids = target_ids.to(device)
+    attention_mask = attention_mask.to(device)
+    logits = model(input_ids, attention_mask)
+
+    logits = logits.to_local() if hasattr(logits, 'to_local') else logits
 
     if global_rank==0:
 
@@ -107,5 +117,5 @@ for batch in dataset:
 
         optimizer.step()
         
-        print(f"Loss: {loss.item()}")
+        print(f"Loss: {loss.item():.4f}")
         
