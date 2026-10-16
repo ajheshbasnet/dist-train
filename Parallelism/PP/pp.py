@@ -79,14 +79,14 @@ for batches in dataload:
     optimizers.zero_grad()
 
     if is_first:
-        schedule.step(input_ids, attn_mask)
+        schedule.step(input_ids, attn_mask=attn_mask)
 
     elif is_last:
         all_losses = []
-        schedule.step(target=targets, losses=all_losses)
+        schedule.step(target=targets, losses=all_losses, attn_mask=attn_mask)
 
     else:
-        schedule.step()
+        schedule.step(attn_mask=attn_mask)
 
     optimizers.step()    
 

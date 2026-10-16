@@ -7,8 +7,9 @@ class Attention(nn.Module):
     
     def __init__(self, configs: configs):
         super().__init__()
-        self.head_dim = configs.hidden_dim // configs.n_heads
+
         self.num_heads = configs.n_heads
+        self.head_dim = configs.hidden_dim // self.num_heads
         
         self.q_proj = nn.Linear(configs.hidden_dim, configs.hidden_dim)
         self.k_proj = nn.Linear(configs.hidden_dim, configs.hidden_dim)
