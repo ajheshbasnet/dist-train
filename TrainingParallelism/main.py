@@ -28,7 +28,7 @@ from torch.distributed.pipelining import PipelineStage, ScheduleGPipe
 device, global_rank, world_size = init_process()
 
 # === Creating Device Mesh ===
-mesh = create_device_mesh(tp_dim=2, pp_dim=1, dp_dim=2, world_size=world_size)
+mesh = create_device_mesh(tp_dim=2, pp_dim=2, dp_dim=2, world_size=world_size)
 n_micro_batches = 4
 
 # === Creating TP ===
@@ -37,13 +37,13 @@ def create_tp_model(model:Transformer, tp_mesh, is_first, is_last):
     layouts = {}
 
     if is_first:
-        layouts['token_embedding.token_embedding'] = RowwiseParallel(output_layouts=Shard(1))
-        layouts['token_embedding.position_embedding'] = RowwiseParallel(output_layouts=Shard(1))
+        layouts['token_embedding.token_embedding'] = RowwiseParallel(input_layouts = Replicate(), output_layouts=Shard(1))
+        layouts['token_embedding.position_embedding'] = RowwiseParallel(input_layouts = Replicate(), output_layouts=Shard(1))
 
     if is_last:
         layouts['layernorm'] = SequenceParallel()
         layouts['output_proj'] = ColwiseParallel(
-            input_layouts = Shard(1),
+            input_layouts = Shard(1), 
             output_layouts=Shard(-1),  # because the [B, T, vocab_size] dimension is way too huge so shard across the rank in that dimension.
             use_local_output=False)
         
@@ -117,7 +117,6 @@ def main():
     sampler = DistributedSampler(dataset, num_replicas=dp_mesh.size(), rank=dp_mesh.get_local_rank(), drop_last=True)
     dataload = DataLoader(dataset, batch_size=configs().batch_size * n_micro_batches, sampler=sampler, drop_last=True)
 
-
     stage = PipelineStage(model, stage_index=pp_rank, num_stages=pp_size, device=device, group=pp_mesh.get_group())
 
     schedule = ScheduleGPipe(stage, n_micro_batches, loss_fn = loss_function)    
@@ -133,7 +132,7 @@ def main():
         for batches in dataload:
             input_ids, targets, attn_mask = batches['inputs'], batches['targets'], batches['attn_mask']
             input_ids, targets, attn_mask = input_ids.to(device), targets.to(device), attn_mask.to(device)
-                        
+            
             all_loss = []
             optimizer.zero_grad()
 
@@ -156,8 +155,15 @@ def main():
             optimizer.step()    
 
             if is_last:
-              loss_val = torch.stack(all_loss).mean().item()
-              print(Fore.LIGHTBLACK_EX + f"Epoch {epoch}: Loss = {loss_val :.4f}" + Style.RESET_ALL)
+              loss_val = torch.stack(all_loss).mean()
+
+              if hasattr(loss_val, "to_local"):
+                loss_val = loss_val.to_local()
+
+              dist.all_reduce(loss_val, op=dist.ReduceOp.AVG, group=dp_mesh.get_group())
+
+              if tp_mesh.get_local_rank() == 0 and dp_mesh.get_local_rank() == 0 and pp_rank == pp_size - 1:
+                print(Fore.GREEN + f"Epoch {epoch}: Loss = {loss_val.item():.4f}" + Style.RESET_ALL)
 
 
         
