@@ -64,7 +64,11 @@ criterion = torch.nn.CrossEntropyLoss(ignore_index=0) # will change this later.
 # == training loop ==
 
 for epoch in range(configs().epochs):
+    
+    sampler.set_epoch(epoch)
+
     for batch in dataload:
+
         input_ids = batch['inputs']
         attention_mask = batch['attn_mask']
         target_ids = batch['targets']

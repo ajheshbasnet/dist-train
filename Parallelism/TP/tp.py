@@ -129,4 +129,4 @@ for batch in dataload:
 
     if global_rank==0:
 
-      print(Fore.RED+f"Loss: {loss_val.item():.4f}")
+      print(Fore.RED+f"Loss: {loss_va :.4f}")
