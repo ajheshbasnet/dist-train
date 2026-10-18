@@ -21,7 +21,7 @@ def init_process():
         return device, global_rank, world_size
 
 
-def create_device_mesh(tp_dim: int, pp_dim: int, dp_dim: int):
+def create_device_mesh(tp_dim: int, pp_dim: int, dp_dim: int, world_size):
     assert tp_dim * pp_dim * dp_dim == world_size, "Device mesh dimensions must match world size"
     device_type = "cuda" if torch.cuda.is_available() else "cpu"
     return dist.init_device_mesh(device_type, (tp_dim, pp_dim, dp_dim), mesh_dim_names=("tp", "pp", "dp"))

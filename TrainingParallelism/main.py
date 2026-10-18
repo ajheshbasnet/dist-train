@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.distributed as dist  
 from utils import init_process, create_device_mesh
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Transformer'))
-from Transformer import Transformer
+from transformer import Transformer
 from dataloader import return_dataset
 from configs import configs
 from colorama import Fore, Style
@@ -28,7 +28,7 @@ from torch.distributed.pipelining import PipelineStage, ScheduleGPipe
 device, global_rank, world_size = init_process()
 
 # === Creating Device Mesh ===
-mesh = create_device_mesh(tp_dim=2, pp_dim=2, dp_dim=2)
+mesh = create_device_mesh(tp_dim=1, pp_dim=2, dp_dim=1, world_size=world_size)
 n_micro_batches = 4
 
 # === Creating TP ===
@@ -54,23 +54,23 @@ def create_tp_model(model:Transformer, tp_mesh, is_first, is_last):
         format = {
             "attn_norm": SequenceParallel(),
             "attention": PrepareModuleInput(
-                input_layouts = (Shard(1), None),
-                desired_input_layouts = (Replicate(), None),
+                input_layouts = (Shard(1), ),
+                desired_input_layouts = (Replicate(),),
                 use_local_output = True
                 ),
             "attention.q_proj": ColwiseParallel(),
             "attention.k_proj": ColwiseParallel(),
             "attention.v_proj": ColwiseParallel(),
-            "attention.o_proj": RowwiseParallel(output_layouts = Shard(1)),
+            "attention.out_proj": RowwiseParallel(output_layouts = Shard(1)),
 
             "ffnn_norm": SequenceParallel(),
-            "feed_forward": PrepareModuleInput(
+            "ffnn": PrepareModuleInput(
                 input_layouts = (Shard(1),),
                 desired_input_layouts = (Replicate(),),
                 use_local_output = True
                 ),
-            "feed_forward.fc1": ColwiseParallel(),
-            "feed_forward.fc2": RowwiseParallel(output_layouts=Shard(1)),
+            "ffnn.fc1": ColwiseParallel(),
+            "ffnn.fc2": RowwiseParallel(output_layouts=Shard(1)),
         }
         layer.attention.num_heads = layer.attention.num_heads // tp_mesh.size()
         parallelize_module(layer, tp_mesh, format)
@@ -124,7 +124,7 @@ def main():
 
     optimizer = torch.optim.AdamW(model.parameters(), lr = configs().lr)
 
-    for epoch in range(configs().epoch):
+    for epoch in range(configs().epochs):
 
         sampler.set_epoch(epoch)
 
@@ -139,7 +139,7 @@ def main():
                 if is_first:
                     schedule.step(input_ids, attn_mask=attn_mask)
                 elif is_last:
-                    schedule.step(target=targets, attn_mask=attn_mask, losses=all_loss)    
+                    schedule.step(target=targets, losses=all_loss, attn_mask=attn_mask)    
                 else:
                     schedule.step(attn_mask=attn_mask)    
 

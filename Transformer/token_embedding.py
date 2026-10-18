@@ -10,7 +10,6 @@ class Token_Embedding(nn.Module):
         self.position_embedding = nn.Embedding(configs.max_seq_len, configs.hidden_dim)
     
     def forward(self, x):
-        print(x.size())
         _, T = x.size()
         tok_emb = self.token_embedding(x)
         pos = torch.arange(T, device=x.device).unsqueeze(0)   #[1, T]
