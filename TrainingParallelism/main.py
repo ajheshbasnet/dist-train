@@ -28,7 +28,7 @@ from torch.distributed.pipelining import PipelineStage, ScheduleGPipe
 device, global_rank, world_size = init_process()
 
 # === Creating Device Mesh ===
-mesh = create_device_mesh(tp_dim=1, pp_dim=2, dp_dim=1, world_size=world_size)
+mesh = create_device_mesh(tp_dim=2, pp_dim=1, dp_dim=2, world_size=world_size)
 n_micro_batches = 4
 
 # === Creating TP ===
@@ -128,6 +128,8 @@ def main():
 
         sampler.set_epoch(epoch)
 
+        print(f"=== Training Has Been Started at {global_rank} ===")
+
         for batches in dataload:
             input_ids, targets, attn_mask = batches['inputs'], batches['targets'], batches['attn_mask']
             input_ids, targets, attn_mask = input_ids.to(device), targets.to(device), attn_mask.to(device)
@@ -136,18 +138,28 @@ def main():
             optimizer.zero_grad()
 
             with loss_parallel():
-                if is_first:
-                    schedule.step(input_ids, attn_mask=attn_mask)
-                elif is_last:
-                    schedule.step(target=targets, losses=all_loss, attn_mask=attn_mask)    
-                else:
-                    schedule.step(attn_mask=attn_mask)    
+
+              if is_first and is_last:
+                schedule.step(
+                    input_ids,
+                    target=targets,
+                    losses=all_loss,
+                    attn_mask=attn_mask,
+                )            
+              elif is_first:
+                  schedule.step(input_ids, attn_mask=attn_mask)
+              elif is_last:
+                  schedule.step(target=targets, losses=all_loss, attn_mask=attn_mask)    
+              else:
+                  schedule.step(attn_mask=attn_mask)     
 
             optimizer.step()    
 
-        if is_last:
-            loss_val = torch.stack(all_loss).mean().item()
-            print(Fore.LIGHTBLACK_EX + f"Epoch {epoch}: Loss = {loss_val :.4f}" + Style.RESET_ALL)
+            if is_last:
+              loss_val = torch.stack(all_loss).mean().item()
+              print(Fore.LIGHTBLACK_EX + f"Epoch {epoch}: Loss = {loss_val :.4f}" + Style.RESET_ALL)
 
+
+        
 if __name__ == "__main__":
     main()
