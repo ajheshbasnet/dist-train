@@ -87,6 +87,7 @@ def loss_function(output, target):
     return nn.CrossEntropyLoss()(output.reshape(-1, output.size(-1)), target.reshape(-1))
     
 def main():
+    torch.manual_seed(1234)          
     model = Transformer(configs()).to(device)
     tp_mesh, pp_mesh, dp_mesh = mesh['tp'], mesh['pp'], mesh['dp']
 
