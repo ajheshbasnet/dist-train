@@ -28,7 +28,7 @@ from torch.distributed.pipelining import PipelineStage, ScheduleGPipe
 device, global_rank, world_size = init_process()
 
 # === Creating Device Mesh ===
-mesh = create_device_mesh(tp_dim=1, pp_dim=2, dp_dim=2, world_size=world_size)
+mesh = create_device_mesh(tp_dim=2, pp_dim=2, dp_dim=2, world_size=world_size)
 n_micro_batches = 4
 
 # === Creating TP ===
