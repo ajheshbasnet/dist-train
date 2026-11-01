@@ -28,7 +28,7 @@ from torch.distributed.pipelining import PipelineStage, ScheduleGPipe
 device, global_rank, world_size = init_process()
 
 # === Creating Device Mesh ===
-mesh = create_device_mesh(tp_dim=2, pp_dim=2, dp_dim=2, world_size=world_size)
+mesh = create_device_mesh(tp_dim=1, pp_dim=2, dp_dim=2, world_size=world_size)
 n_micro_batches = 4
 
 # === Creating TP ===
@@ -155,15 +155,8 @@ def main():
             optimizer.step()    
 
             if is_last:
-              loss_val = torch.stack(all_loss).mean()
-
-              if hasattr(loss_val, "to_local"):
-                loss_val = loss_val.to_local()
-
-              dist.all_reduce(loss_val, op=dist.ReduceOp.AVG, group=dp_mesh.get_group())
-
-              if tp_mesh.get_local_rank() == 0 and dp_mesh.get_local_rank() == 0 and pp_rank == pp_size - 1:
-                print(Fore.GREEN + f"Epoch {epoch}: Loss = {loss_val.item():.4f}" + Style.RESET_ALL)
+              loss_val = torch.stack(all_loss).mean().item()
+              print(Fore.LIGHTBLACK_EX + f"Epoch {epoch}: Loss = {loss_val :.4f}" + Style.RESET_ALL)
 
 
         
