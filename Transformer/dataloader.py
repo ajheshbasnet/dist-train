@@ -15,7 +15,7 @@ def return_dataset():
     tokenizer_path = os.path.join(current_dir, configs.tokenizer_path)
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
-    text_stream = ''.join(datasets['train']['text'])
+    text_stream = ''.join(datasets['train'])
 
     text_stream_ids = tokenizer(text_stream)['input_ids']  # since it's in shape [1, K] so taking only K dimension
 

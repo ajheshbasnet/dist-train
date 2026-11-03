@@ -1,39 +1,49 @@
-from datasets import load_dataset, load_from_disk
+from datasets import load_dataset
 import os
 from configs import configs
 from transformers import AutoTokenizer
 import torch
 
-def download_dataset():
-    # Create data directory if it doesn't exist
-    data_dir = os.path.join(os.path.dirname(__file__), "data")
-    os.makedirs(data_dir, exist_ok=True)
+# def download_dataset():
+#     # Create data directory if it doesn't exist
+#     data_dir = os.path.join(os.path.dirname(__file__), "data")
+#     os.makedirs(data_dir, exist_ok=True)
 
-    # Load and save dataset
-    dataset = load_dataset(
-        "Salesforce/wikitext",
-        "wikitext-2-raw-v1"
-    )
+#     # Load and save dataset
+#     dataset = load_dataset(
+#         "Salesforce/wikitext",
+#         "wikitext-2-raw-v1"
+#     )
 
-    dataset['train'] = dataset['train']
-    dataset['test'] = dataset['test']
-    dataset['validation'] = dataset['validation']
+#     dataset['train'] = dataset['train']
+#     dataset['test'] = dataset['test']
+#     dataset['validation'] = dataset['validation']
 
-    # Save to disk
-    dataset.save_to_disk(data_dir)
-    print(f"Dataset saved to: {data_dir}")
-    return dataset
+#     # Save to disk
+#     dataset.save_to_disk(data_dir)
+#     print(f"Dataset saved to: {data_dir}")
+#     return dataset
 
 def load_local_dataset():
-    # Load from local directory
-    data_dir = os.path.join(os.path.dirname(__file__), "data")
-    dataset = load_from_disk(data_dir)
-    print(f"Dataset loaded from: {data_dir}")
+    # Load from local text file
+    data_path = os.path.join(os.path.dirname(__file__), "data", "train", "dataset.txt")
+    
+    with open(data_path, 'r', encoding='utf-8') as f:
+        text = f.read()
+    
+    # Return in the format expected by dataloader
+    dataset = {
+        'train': {
+            'text': [text]  # Wrap in list to match expected format
+        }
+    }
+    
+    print(f"Dataset loaded from: {data_path}")
     return dataset
 
 if __name__ == "__main__":
     # Download the dataset
-    dataset = download_dataset()
+    # dataset = download_dataset()
     dataset = load_local_dataset()
     print(dataset)
 
