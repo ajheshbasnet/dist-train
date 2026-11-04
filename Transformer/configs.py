@@ -11,8 +11,8 @@ class configs:
     batch_size: int = 2
     epochs: int = 1
     
-    max_lr:float = 3e-4
-    min_lr: float = 1e-4
+    max_lr:float = 5e-4
+    min_lr: float = 5e-5
     warmup_steps:int = None
 
     tokenizer_path: str = "my_tokenizer"

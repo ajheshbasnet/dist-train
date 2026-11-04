@@ -28,16 +28,21 @@ def main():
     if log_to_wandb:
         run = get_run()
 
-    cfg = configs()
+    cfg = configs()    
     dataset, tokenizer = return_dataset()
     cfg.vocab_size=len(tokenizer)
+
+    cfg.batch_size = 18
+    
     dataloader = DataLoader(dataset, batch_size=cfg.batch_size)
 
+    print(f'Total_dataloader: {len(dataloader)}')
+    
     model = Transformer(cfg).to(device)
 
-    configs.warmup_steps = int(len(dataloader) * configs.epochs * 0.1)
+    cfg.warmup_steps = int(len(dataloader) * cfg.epochs * 0.1)
 
-    optimizers = torch.optim.AdamW(model.parameters(), lr=configs.max_lr)
+    optimizers = torch.optim.AdamW(model.parameters(), lr=cfg.max_lr)
     scheduler = LambdaLR(optimizers, cosine_annealing)
 
     criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
