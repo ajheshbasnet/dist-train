@@ -33,6 +33,8 @@ def main():
     dataset, tokenizer = return_dataset()
     dataloader = DataLoader(dataset, batch_size=configs.batch_size)
 
+    configs.warmup_steps = int(len(dataloader) * configs.epochs * 0.1)
+
     optimizers = torch.optim.AdamW(model.parameters(), lr=configs.lr)
     scheduler = LambdaLR(optimizers, cosine_annealing)
 

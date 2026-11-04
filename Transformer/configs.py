@@ -10,7 +10,11 @@ class configs:
     resid_dropout: float = 0.01
     batch_size: int = 2
     epochs: int = 1
-    lr: float = 1e-4
+    
+    max_lr:float = 3e-4
+    min_lr: float = 1e-4
+    warmup_steps:int = None
+
     tokenizer_path: str = "my_tokenizer"
 
     wandb_api_key: str = "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"
