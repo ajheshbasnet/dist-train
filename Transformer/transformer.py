@@ -47,8 +47,9 @@ class Transformer(nn.Module):
         return x
 
     def generate(self, texts, max_new_tokens: int = configs.max_new_tokens, temperature: float = 1.0, top_p: float = 1.0):
-
-        input_ids = tokenizer(texts, return_tensors = 'pt')['input_ids']
+        
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        input_ids = tokenizer(texts, return_tensors = 'pt')['input_ids'].to(device)
         output_ids = list(input_ids.clone()[0])
 
         for _ in range(max_new_tokens):
