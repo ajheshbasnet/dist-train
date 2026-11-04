@@ -103,7 +103,9 @@ def main():
             if log_to_wandb:
                 run.log({'epoch_train_loss': epoch_train_loss / epoch_train_step, 'epoch_train_perplexity': epoch_train_perplexity / epoch_train_step}, step=global_step)
 
-    # train()
+    train()
+
+    torch.save(model.state_dict(), "/content/dist-train/Transformer/weight.pth")
 
     def eval(text):
         output_ids, output_text = model.generate(

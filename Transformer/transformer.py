@@ -46,26 +46,97 @@ class Transformer(nn.Module):
             return logits    
         return x
 
-    def generate(self, texts, max_new_tokens: int = configs.max_new_tokens, temperature: float = 1.0, top_p: float = 1.0):
-        
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        input_ids = tokenizer(texts, return_tensors = 'pt')['input_ids'].to(device)
-        output_ids = list(input_ids.clone()[0])
+    @torch.inference_mode()
+    def generate(
+        self,
+        texts,
+        max_new_tokens: int = configs.max_new_tokens,
+        temperature: float = 1.0,
+        top_p: float = 1.0
+    ):
 
-        for _ in range(max_new_tokens):
-            logits = self(input_ids)
-            new_token_logits = logits[:, -1, :][0]
-            norm_token_logits = new_token_logits.softmax(dim=-1)
-            vals, indices = torch.sort(norm_token_logits, descending=True)   
-            cumsum = vals.cumsum(dim=-1)
-            top_p_true = cumsum<top_p
-            indices = indices[top_p_true]
-            top_p_prob_val = vals[indices].softmax(dim=-1)
-            output_token_idx = torch.multinomial(top_p_prob_val, 1)
-            output_ids.append(output_token_idx)
-            input_ids = torch.cat([input_ids, output_token_idx.unsqueeze(-1)], dim = -1)
+      if temperature <= 0:
+          raise ValueError("Temperature must be greater than zero.")
 
-        output_ids = [items.item() for items in output_ids]
-        return output_ids, tokenizer.decode(output_ids)
+      if not 0 < top_p <= 1:
+          raise ValueError("top_p must be in the interval (0, 1].")
 
-    
+      device = next(self.parameters()).device
+
+      was_training = self.training
+      self.eval()
+
+      try:
+          input_ids = tokenizer(
+              texts,
+              return_tensors="pt"
+          )["input_ids"].to(device)
+
+          if input_ids.size(0) != 1:
+              raise ValueError("This implementation supports one prompt at a time.")
+
+          output_ids = input_ids[0].tolist()
+
+          for _ in range(max_new_tokens):
+
+              # 1. Forward pass
+              logits = self(input_ids)
+
+              # 2. Get logits of the last token
+              next_token_logits = logits[:, -1, :]
+
+              # 3. Apply temperature
+              next_token_logits = next_token_logits / temperature
+
+              # 4. Convert logits into probabilities
+              probs = torch.softmax(next_token_logits, dim=-1)[0]
+
+              # 5. Top-p / nucleus sampling
+              if top_p < 1.0:
+
+                  sorted_probs, sorted_indices = torch.sort(
+                      probs,
+                      descending=True
+                  )
+
+                  cumulative_probs = sorted_probs.cumsum(dim=-1)
+
+                  # Preserve the token that crosses the top-p threshold
+                  keep_mask = (cumulative_probs - sorted_probs) < top_p
+
+                  filtered_sorted_probs = sorted_probs * keep_mask
+
+                  # Restore original vocabulary ordering
+                  filtered_probs = torch.zeros_like(probs)
+
+                  filtered_probs.scatter_(
+                      dim=0,
+                      index=sorted_indices,
+                      src=filtered_sorted_probs
+                  )
+
+                  # Renormalize
+                  probs = filtered_probs / filtered_probs.sum()
+
+              # 6. Sample next token
+              output_token_idx = torch.multinomial(probs, num_samples=1)
+
+              # 7. Append generated token
+              token_id = output_token_idx.item()
+
+              output_ids.append(token_id)
+
+              input_ids = torch.cat(
+                  [input_ids, output_token_idx.unsqueeze(-1)],
+                  dim=-1
+              )
+
+              # 8. Stop at EOS
+              if tokenizer.eos_token_id is not None:
+                  if token_id == tokenizer.eos_token_id:
+                      break
+
+          return output_ids, tokenizer.decode(output_ids)
+
+      finally:
+          self.train(was_training)
