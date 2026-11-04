@@ -9,7 +9,7 @@ class configs:
     ffnn_dropout: float = 0.01
     resid_dropout: float = 0.01
     batch_size: int = 2
-    epochs: int = 1
+    epochs: int = 5
     
     max_lr:float = 5e-4
     min_lr: float = 5e-5

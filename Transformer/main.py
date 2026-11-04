@@ -91,11 +91,9 @@ def main():
 
             if log_to_wandb:
                 run.log({'epoch': epoch, 'batch_train_loss': loss.item(), 'batch_perplexity': perplexity.item()}, step=global_step)
+                    
+        print(Fore.RED + f'   Loss: {(epoch_train_step/epoch_train_step):.2f} | Perplexity: {(epoch_train_perplexity / epoch_train_step) :.2f}' + Style.RESET_ALL)
             
-            
-            print(Fore.RED + f'   Loss: {loss.item():.3f} | Perplexity: {perplexity:.3f}' + Style.RESET_ALL)
-            
-
         if log_to_wandb:
             run.log({'epoch_train_loss': epoch_train_loss / epoch_train_step, 'epoch_train_perplexity': epoch_train_perplexity / epoch_train_step}, step=global_step)
 
