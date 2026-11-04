@@ -52,7 +52,7 @@ def return_dataset():
             inputs, targets = self.input_ids[idx], self.target_ids[idx]
             inputs = torch.tensor(inputs, dtype=torch.long)
             targets = torch.tensor(targets, dtype=torch.long)
-
+            targets[targets==tokenizer.pad_token_id] = -100
             attn_mask = (inputs != tokenizer.pad_token_id).long()
             return {
                 'inputs': inputs, 

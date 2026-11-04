@@ -35,7 +35,7 @@ def main():
 
     configs.warmup_steps = int(len(dataloader) * configs.epochs * 0.1)
 
-    optimizers = torch.optim.AdamW(model.parameters(), lr=configs.lr)
+    optimizers = torch.optim.AdamW(model.parameters(), lr=configs.max_lr)
     scheduler = LambdaLR(optimizers, cosine_annealing)
 
     criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
