@@ -52,9 +52,10 @@ def main():
 
     print(Fore.GREEN + f'== Trainable Parameters: {total_params/1e6 :.2f} Millions ==' + Style.RESET_ALL)
 
-    global_step = 0
     
     def train():
+        global_step = 0
+
         for epoch in range(configs.epochs):
 
             epoch_train_loss = 0
@@ -107,14 +108,14 @@ def main():
     def eval(text):
         output_ids, output_text = model.generate(
             text,
-            max_new_tokens = 10,
-            temperature = 1.0,
-            top_p = 1.0
+            max_new_tokens = 500,
+            temperature = 0.80,
+            top_p = 0.93
         )
 
         return output_text
 
-    print(eval("Hi I am from Jhapa Nepal"))
+    print(eval("Sir Isaac Newton"))
         
 if __name__ == "__main__":
     main()
