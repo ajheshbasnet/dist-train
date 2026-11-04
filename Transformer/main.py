@@ -37,15 +37,16 @@ def main():
     dataloader = DataLoader(dataset, batch_size=cfg.batch_size)
 
     print(f'Total_dataloader: {len(dataloader)}')
-    
+
     model = Transformer(cfg).to(device)
 
     cfg.warmup_steps = int(len(dataloader) * cfg.epochs * 0.1)
+    cfg.max_steps =int(len(dataloader) * cfg.epochs)
 
     optimizers = torch.optim.AdamW(model.parameters(), lr=cfg.max_lr)
-    scheduler = LambdaLR(optimizers, cosine_annealing)
+    scheduler = LambdaLR(optimizers, lambda step: cosine_annealing(step, cfg))
 
-    criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
+    criterion = nn.CrossEntropyLoss(ignore_index=-100)
     
     total_params = sum(p.numel() for p in model.parameters())
 
