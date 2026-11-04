@@ -28,10 +28,12 @@ def main():
     if log_to_wandb:
         run = get_run()
 
-    model = Transformer(configs()).to(device)
-
+    cfg = configs()
     dataset, tokenizer = return_dataset()
-    dataloader = DataLoader(dataset, batch_size=configs.batch_size)
+    cfg.vocab_size=len(tokenizer)
+    dataloader = DataLoader(dataset, batch_size=cfg.batch_size)
+
+    model = Transformer(cfg).to(device)
 
     configs.warmup_steps = int(len(dataloader) * configs.epochs * 0.1)
 
