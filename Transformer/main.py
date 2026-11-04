@@ -54,48 +54,67 @@ def main():
 
     global_step = 0
     
-    for epoch in range(configs.epochs):
+    def train():
+        for epoch in range(configs.epochs):
 
-        epoch_train_loss = 0
-        epoch_train_step = 0
-        epoch_train_perplexity = 0
+            epoch_train_loss = 0
+            epoch_train_step = 0
+            epoch_train_perplexity = 0
 
-        print(Fore.BLUE + f'\n== Epoch: {epoch+1} / {configs.epochs} ==' + Style.RESET_ALL)
+            print(Fore.BLUE + f'\n== Epoch: {epoch+1} / {configs.epochs} ==' + Style.RESET_ALL)
 
-        for batches in dataloader:
+            for batches in dataloader:
 
-            input_batch, target_batch, attn_mask = batches['inputs'], batches['targets'], batches['attn_mask']
+                input_batch, target_batch, attn_mask = batches['inputs'], batches['targets'], batches['attn_mask']
 
-            input_batch = input_batch.to(device)
-            attn_mask = attn_mask.to(device)
-            target_batch = target_batch.to(device)
-            
-            output = model(input_batch, attn_mask)
-            
-            loss = criterion(
-                output.view(-1, output.size(-1)), 
-                target_batch.view(-1),
-                )
+                input_batch = input_batch.to(device)
+                attn_mask = attn_mask.to(device)
+                target_batch = target_batch.to(device)
+                
+                output = model(input_batch, attn_mask)
+                
+                loss = criterion(
+                    output.view(-1, output.size(-1)), 
+                    target_batch.view(-1),
+                    )
 
-            optimizers.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), configs.max_grad_norm)
-            optimizers.step()
-            scheduler.step()
+                optimizers.zero_grad()
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), configs.max_grad_norm)
+                optimizers.step()
+                scheduler.step()
 
-            perplexity = torch.exp(loss)
-            epoch_train_loss += loss.item()
-            epoch_train_perplexity += perplexity.item()
-            epoch_train_step += 1
-            global_step += 1
+                perplexity = torch.exp(loss)
+                epoch_train_loss += loss.item()
+                epoch_train_perplexity += perplexity.item()
+                epoch_train_step += 1
+                global_step += 1
 
+                if log_to_wandb:
+                    run.log({'epoch': epoch, 
+                    'batch_train_loss': loss.item(), 
+                    'batch_perplexity': perplexity.item()
+                    }, 
+                    step=global_step)
+                        
+            print(Fore.RED + f'   Loss: {(epoch_train_loss/epoch_train_step):.2f} | Perplexity: {(epoch_train_perplexity / epoch_train_step) :.2f}' + Style.RESET_ALL)
+                
             if log_to_wandb:
-                run.log({'epoch': epoch, 'batch_train_loss': loss.item(), 'batch_perplexity': perplexity.item()}, step=global_step)
-                    
-        print(Fore.RED + f'   Loss: {(epoch_train_step/epoch_train_step):.2f} | Perplexity: {(epoch_train_perplexity / epoch_train_step) :.2f}' + Style.RESET_ALL)
-            
-        if log_to_wandb:
-            run.log({'epoch_train_loss': epoch_train_loss / epoch_train_step, 'epoch_train_perplexity': epoch_train_perplexity / epoch_train_step}, step=global_step)
+                run.log({'epoch_train_loss': epoch_train_loss / epoch_train_step, 'epoch_train_perplexity': epoch_train_perplexity / epoch_train_step}, step=global_step)
 
+    # train()
+
+    def eval(text):
+        output_ids, output_text = model.generate(
+            text,
+            max_new_tokens = 10,
+            temperature = 1.0,
+            top_p = 1.0
+        )
+
+        return output_text
+
+    print(eval("Hi I am from Jhapa Nepal"))
+        
 if __name__ == "__main__":
     main()

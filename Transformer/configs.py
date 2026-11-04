@@ -15,6 +15,8 @@ class configs:
     min_lr: float = 5e-5
     warmup_steps:int = None
 
+    max_new_tokens: int = 64
+
     tokenizer_path: str = "my_tokenizer"
 
     wandb_api_key: str = "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"
