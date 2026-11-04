@@ -8,6 +8,8 @@ from colorama import Fore, Style
 from dataloader import return_dataset
 from get_wandb_run import get_run
 from torch.utils.data import DataLoader
+from cosine_annealing import cosine_annealing
+from torch.optim.lr_scheduler import LambdaLR
 
 log_to_wandb = False
 
@@ -31,7 +33,9 @@ def main():
     dataset, tokenizer = return_dataset()
     dataloader = DataLoader(dataset, batch_size=configs.batch_size)
 
-    optimizers = torch.optim.Adam(model.parameters(), lr=configs.lr)
+    optimizers = torch.optim.AdamW(model.parameters(), lr=configs.lr)
+    scheduler = LambdaLR(optimizers, cosine_annealing)
+
     criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
     
     total_params = sum(p.numel() for p in model.parameters())
@@ -67,6 +71,7 @@ def main():
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), configs.max_grad_norm)
             optimizers.step()
+            scheduler.step()
 
             perplexity = torch.exp(loss)
             epoch_train_loss += loss.item()
