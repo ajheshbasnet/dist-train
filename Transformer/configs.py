@@ -1,14 +1,14 @@
 class configs:
     hidden_dim: int = 128
-    max_seq_len: int = 32
+    max_seq_len: int = 128
     n_heads: int = 4
     n_layers: int = 8
-    vocab_size: int = 4000
+    vocab_size: int = 1000
     attn_dropout: float = 0.05
     max_grad_norm: float = 1.0
     ffnn_dropout: float = 0.05
     resid_dropout: float = 0.01
-    batch_size: int = 2
+    batch_size: int = 512
     epochs: int = 100
     
     max_lr:float = 1e-3
