@@ -32,7 +32,7 @@ def main():
     dataset, tokenizer = return_dataset()
     cfg.vocab_size=len(tokenizer)
     
-    dataloader = DataLoader(dataset, batch_size=cfg.batch_size)
+    dataloader = DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True)
 
     print(f'Total_dataloader: {len(dataloader)}')
 
@@ -105,18 +105,6 @@ def main():
     train()
 
     torch.save(model.state_dict(), "/content/dist-train/Transformer/weight.pth")
-
-    def eval(text):
-        output_ids, output_text = model.generate(
-            text,
-            max_new_tokens = 500,
-            temperature = 0.80,
-            top_p = 0.93
-        )
-
-        return output_text
-
-    print(eval("Sir Isaac Newton"))
         
 if __name__ == "__main__":
     main()
