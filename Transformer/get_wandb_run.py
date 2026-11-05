@@ -6,7 +6,9 @@ def get_run():
     run = wandb.init(
         project="transformer",
         config={
-            'lr': configs.lr,
+            'max_lr': configs.max_lr,
+            'min_lr': configs.min_lr,
+            'warmup_steps': configs.warmup_steps,
             'epochs': configs.epochs,
             'batch_size': configs.batch_size,
             'hidden_dim': configs.hidden_dim,
