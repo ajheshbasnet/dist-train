@@ -31,8 +31,6 @@ def main():
     cfg = configs()    
     dataset, tokenizer = return_dataset()
     cfg.vocab_size=len(tokenizer)
-
-    cfg.batch_size = 18
     
     dataloader = DataLoader(dataset, batch_size=cfg.batch_size)
 
@@ -40,10 +38,11 @@ def main():
 
     model = Transformer(cfg).to(device)
 
-    cfg.warmup_steps = int(len(dataloader) * cfg.epochs * 0.1)
     cfg.max_steps =int(len(dataloader) * cfg.epochs)
+    cfg.warmup_steps = int(len(dataloader) * cfg.epochs * 0.1)
+    print(Fore.GREEN + f'Total-Steps: {cfg.max_steps} | Warmup-Steps: {cfg.warmup_steps}')
 
-    optimizers = torch.optim.AdamW(model.parameters(), lr=cfg.max_lr)
+    optimizers = torch.optim.Adam(model.parameters(), lr=cfg.max_lr)
     scheduler = LambdaLR(optimizers, lambda step: cosine_annealing(step, cfg))
 
     criterion = nn.CrossEntropyLoss(ignore_index=-100)

@@ -17,10 +17,10 @@ def eval(text):
       output_ids, output_text = model.generate(
           text,
           max_new_tokens = 100,
-          temperature = 0.8,
-          top_p = 0.9
+          temperature = 0.05,
+          top_p = 0.93
       )
 
       return output_text
 
-print(eval("In his youth, Jobs's parents"))
+print(eval("Cristiano Ronaldo"))

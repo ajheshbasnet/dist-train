@@ -1,13 +1,14 @@
 import os, sys
 import torch
 import torch.nn as nn
-import torch.distributed as dist  
 from utils import init_process, create_device_mesh
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Transformer'))
 from transformer import Transformer
 from dataloader import return_dataset
 from configs import configs
 from colorama import Fore, Style
+from torch.optim.lr_scheduler import LambdaLR
+from cosine_annealing import cosine_annealing
 
 # === For DP ===
 from torch.distributed.fsdp import fully_shard, MixedPrecisionPolicy
