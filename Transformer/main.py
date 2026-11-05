@@ -39,7 +39,10 @@ def main():
     model = Transformer(cfg).to(device)
 
     cfg.max_steps =int(len(dataloader) * cfg.epochs)
-    cfg.warmup_steps = int(len(dataloader) * cfg.epochs * 0.05)
+    
+    if cfg.warmup_steps is None:
+        cfg.warmup_steps = int(len(dataloader) * cfg.epochs * 0.05)
+        
     print(Fore.GREEN + f'Total-Steps: {cfg.max_steps} | Warmup-Steps: {cfg.warmup_steps}')
 
     optimizers = torch.optim.Adam(model.parameters(), lr=cfg.max_lr)

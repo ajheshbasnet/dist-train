@@ -13,7 +13,7 @@ class configs:
     
     max_lr:float = 1e-3
     min_lr: float = 1e-4
-    warmup_steps: int = None
+    warmup_steps: int = 200
 
     max_new_tokens: int = 64
 
