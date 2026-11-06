@@ -164,7 +164,7 @@ flowchart TD
 ## Dataset & Tokenizer
 
 - **Source:** English text **scraped from Wikipedia**, stored as one plain-text file at `Transformer/data/train/dataset.txt`.
-- **Size:** about **2.53 M tokens**, which is about **9.9 K training sequences** of 256 tokens.
+- **Size:** about **718293 tokens**, which is about **9.9 K training sequences** of 256 tokens.
 - **Tokenizer:** a **byte-level BPE** tokenizer trained on this corpus, starting from GPT-2's tokenizer setup (`train_new_from_iterator`):
   - vocabulary size **1200** (1198 learned + `[PAD]` + `[BOS]`)
   - EOS / UNK token: `<|endoftext|>`
