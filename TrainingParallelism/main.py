@@ -78,14 +78,17 @@ def create_tp_model(model:Transformer, tp_mesh, is_first, is_last):
 
     return model
 
+cfg = configs()
+
 def apply_fsdp(model: Transformer, dp_mesh):
     for layer in model.layers:
         fully_shard(layer, mesh=dp_mesh, reshard_after_forward = False)
     fully_shard(model, mesh=dp_mesh, reshard_after_forward = False)
     return model    
-
+    
+criterion = nn.CrossEntropyLoss(ignore_index=-100)
 def loss_function(output, target):
-    return nn.CrossEntropyLoss()(output.reshape(-1, output.size(-1)), target.reshape(-1))
+    return criterion(output.reshape(-1, output.size(-1)), target.reshape(-1))
     
 def main():
     torch.manual_seed(1234)          
@@ -123,10 +126,15 @@ def main():
     schedule = ScheduleGPipe(stage, n_micro_batches, loss_fn = loss_function)    
 
     optimizer = torch.optim.AdamW(model.parameters(), lr = configs().lr)
+    optimizer_scheduler = LambdaLR(optimizer, lambda step: cosine_annealing(step, cfg))
 
     for epoch in range(configs().epochs):
 
         sampler.set_epoch(epoch)
+
+        epoch_train_loss = 0
+        epoch_train_step = 0
+        epoch_train_perplexity = 0
 
         print(f"=== Training Has Been Started at {global_rank} ===")
 
@@ -154,12 +162,15 @@ def main():
                   schedule.step(attn_mask=attn_mask)     
 
             optimizer.step()    
+            optimizer_scheduler.step()
 
             if is_last:
-              loss_val = torch.stack(all_loss).mean().item()
-              print(Fore.LIGHTBLACK_EX + f"Epoch {epoch}: Loss = {loss_val :.4f}" + Style.RESET_ALL)
+              loss_val_per_batch = torch.stack(all_loss).mean()
+              epoch_train_loss += loss_val_per_batch.item()
+              epoch_train_perplexity += loss_val_per_batch.exp().item()
+              epoch_train_step += 1
 
-
+        print(Fore.RED + f'   Loss: {(epoch_train_loss/epoch_train_step):.2f} | Perplexity: {(epoch_train_perplexity / epoch_train_step) :.2f}' + Style.RESET_ALL)
         
 if __name__ == "__main__":
     main()

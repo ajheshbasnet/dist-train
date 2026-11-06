@@ -1,6 +1,7 @@
 class configs:
+    
     hidden_dim: int = 128
-    max_seq_len: int = 96
+    max_seq_len: int = 256
     n_heads: int = 4
     n_layers: int = 8
     vocab_size: int = 1200
@@ -11,9 +12,9 @@ class configs:
     batch_size: int = 64
     epochs: int = 150
     
-    max_lr:float = 1e-3
-    min_lr: float = 1e-4
-    warmup_steps: int = 500
+    max_lr:float = 5e-3
+    min_lr: float = 5e-4
+    warmup_steps: int = 150
 
     max_new_tokens: int = 64
 
