@@ -11,7 +11,7 @@ from torch.optim.lr_scheduler import LambdaLR
 from cosine_annealing import cosine_annealing
 
 # === For DP ===
-from torch.distributed.fsdp import fully_shard, MixedPrecisionPolicy
+from torch.distributed.fsdp import fully_shard
 from torch.utils.data import DistributedSampler, DataLoader
 
 # === For TP ===
@@ -29,7 +29,7 @@ from torch.distributed.pipelining import PipelineStage, ScheduleGPipe
 device, global_rank, world_size = init_process()
 
 # === Creating Device Mesh ===
-mesh = create_device_mesh(tp_dim=2, pp_dim=2, dp_dim=2, world_size=world_size)
+mesh = create_device_mesh(tp_dim=2, pp_dim=2, dp_dim=1, world_size=world_size)
 n_micro_batches = 4
 
 # === Creating TP ===
@@ -121,11 +121,13 @@ def main():
     sampler = DistributedSampler(dataset, num_replicas=dp_mesh.size(), rank=dp_mesh.get_local_rank(), drop_last=True)
     dataload = DataLoader(dataset, batch_size=configs().batch_size * n_micro_batches, sampler=sampler, drop_last=True)
 
+    print(f'=== Total Dataloader: {len(dataload)} ===')
+
     stage = PipelineStage(model, stage_index=pp_rank, num_stages=pp_size, device=device, group=pp_mesh.get_group())
 
     schedule = ScheduleGPipe(stage, n_micro_batches, loss_fn = loss_function)    
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr = configs().lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr = configs().max_lr)
     optimizer_scheduler = LambdaLR(optimizer, lambda step: cosine_annealing(step, cfg))
 
     for epoch in range(configs().epochs):
@@ -164,11 +166,16 @@ def main():
             optimizer.step()    
             optimizer_scheduler.step()
 
-            if is_last:
-              loss_val_per_batch = torch.stack(all_loss).mean()
-              epoch_train_loss += loss_val_per_batch.item()
-              epoch_train_perplexity += loss_val_per_batch.exp().item()
-              epoch_train_step += 1
+            if tp_mesh.size() > 1:              
+              if is_last and tp_mesh.get_local_rank()==0:  # so that only one loss is printed...!
+                loss_val_per_batch = torch.stack(all_loss).mean()
+                epoch_train_loss += loss_val_per_batch.item()
+                epoch_train_perplexity += loss_val_per_batch.exp().item()
+                epoch_train_step += 1
+                if epoch_train_step%10==0:
+                  print(Fore.BLUE + f'Batch Loss@{epoch_train_step}: {(epoch_train_loss/epoch_train_step):.2f}'
+                   + Style.RESET_ALL)
+
 
         print(Fore.RED + f'   Loss: {(epoch_train_loss/epoch_train_step):.2f} | Perplexity: {(epoch_train_perplexity / epoch_train_step) :.2f}' + Style.RESET_ALL)
         
