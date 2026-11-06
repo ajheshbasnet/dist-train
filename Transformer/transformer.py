@@ -77,8 +77,9 @@ class Transformer(nn.Module):
 
           output_ids = input_ids[0].tolist()
 
-          if (max_new_tokens + input_ids.size(-1)) > configs().max_new_tokens:
-            max_new_tokens = configs().max_new_tokens - input_ids.size(-1)
+          # Prompt + generated tokens must fit in the position embedding table (max_seq_len)
+          if (max_new_tokens + input_ids.size(-1)) > configs.max_seq_len:
+            max_new_tokens = max(0, configs.max_seq_len - input_ids.size(-1))
 
           for _ in range(max_new_tokens):
 

@@ -1,3 +1,5 @@
+import os
+
 class configs:
     
     hidden_dim: int = 128
@@ -20,4 +22,5 @@ class configs:
 
     tokenizer_path: str = "my_tokenizer"
 
-    wandb_api_key: str = "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"
+    # Never hard-code secrets: set WANDB_API_KEY in your environment instead.
+    wandb_api_key: str = os.environ.get("WANDB_API_KEY")

@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+.env
+wandb/
+*.pth
+*.pt
+TrainingParallelism/checkpoints/

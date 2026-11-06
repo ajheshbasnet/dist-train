@@ -5,8 +5,8 @@ import torch.nn as nn
 import random
 import numpy as np
 from colorama import Fore, Style
+import os
 from dataloader import return_dataset
-from get_wandb_run import get_run
 from torch.utils.data import DataLoader
 from cosine_annealing import cosine_annealing
 from torch.optim.lr_scheduler import LambdaLR
@@ -26,6 +26,7 @@ def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     if log_to_wandb:
+        from get_wandb_run import get_run   # imported lazily so wandb is only needed when logging
         run = get_run()
 
     cfg = configs()    
@@ -107,7 +108,9 @@ def main():
 
     train()
 
-    torch.save(model.state_dict(), "/content/dist-train/Transformer/weight.pth")
+    save_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "weight.pth")
+    torch.save(model.state_dict(), save_path)
+    print(Fore.GREEN + f'== Weights saved to {save_path} ==' + Style.RESET_ALL)
         
 if __name__ == "__main__":
     main()

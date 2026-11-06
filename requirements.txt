@@ -1,6 +1,8 @@
-# Python 3.11.x required
-torch>=2.5.0
+# Python 3.11+ (tested venv: Python 3.13, torch 2.14)
+# torch>=2.6 needed: PipelineStage runtime shape inference, get_total_norm / clip_grads_with_norm_, public torch.distributed.tensor
+torch>=2.6.0
 transformers
 datasets
 colorama
-
+numpy
+wandb   # only needed when log_to_wandb = True in Transformer/main.py
